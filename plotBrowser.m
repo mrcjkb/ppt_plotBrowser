@@ -65,6 +65,8 @@ classdef plotBrowser < handle
                 h = findobj(0, 'type', 'figure');
                 if numel(h) > 1
                     h = gcf;
+                elseif isempty(h)
+                    error('No figure found.')
                 end
             end
             if ~isa(h, 'matlab.ui.Figure') % Check for correct input
