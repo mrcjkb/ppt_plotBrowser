@@ -1,8 +1,7 @@
 classdef plotBrowserColorState < plotBrowserState
-    %PLOTBROWSERCOLORSTATE For hiding objects by changing their color
-    
-    properties
-    end
+    %PLOTBROWSERCOLORSTATE State class for the plotBrowser. For hiding objects by changing their color.
+    %
+    %SEE ALSO: plotBrowser
     
     methods
         function s = plotBrowserColorState(p)

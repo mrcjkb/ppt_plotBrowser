@@ -2,6 +2,8 @@ classdef (Abstract) TickLabelEntry < customStringEntry
     %TICKLABELENTRY Abstract class for holding and manipulating custom TickLabel
     %entries in the plotBrowser class. String getters and setters
     %overloaded to work with cell arrays.
+    %
+    %SEE ALSO: plotBrowser
     
     methods
         function cobj = copyobj(l, ax)

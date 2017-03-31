@@ -1,6 +1,19 @@
 classdef plotBrowser < handle
-    %UNTITLED Summary of this class goes here
-    %   Detailed explanation goes here
+    %PLOTBROWSER: GUI tool (similar to Matlab's plotbrowser)
+    %intended for quick creation of images for PowerPoint animations.
+    %
+    %Syntax:
+    %
+    %   plotBrowser; % opens a plotBrowser for the current figure
+    %   plotBrowser(h); % opens a plotBrowser for figure h
+    %   p = plotBrowser(_); % returns a plotBrowser object p that contains
+    %                       % a cell array of the graphics handles that can
+    %                       % be hidden/shown
+    %
+    %Author: Marc Jakobi
+    %        23.03.2017
+    %
+    %SEE ALSO: plotbrowser
     properties
         objList;
     end

@@ -1,5 +1,7 @@
 classdef (Abstract) plotBrowserState < handle
-    %PLOTBROWSERSTATE State interface for the plotBrowser class
+    %PLOTBROWSERSTATE Abstract State interface for the plotBrowser.
+    %
+    %SEE ALSO: plotBrowser
     
     properties
         plotBrowserObj;

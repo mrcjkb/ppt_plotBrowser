@@ -1,6 +1,8 @@
 classdef plotBrowserVisibleState < plotBrowserState
-    %PLOTBROWSERVISIBLESTATE For hiding objects by setting their visibility
-    
+    %PLOTBROWSERVISIBLESTATE State class for the plotBrowser. 
+    %For hiding objects by setting their visibility.
+    %
+    %SEE ALSO: plotBrowser
     properties
     end
     
