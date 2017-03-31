@@ -6,6 +6,7 @@ classdef XTickLabelEntry < axesStringEntry
     end
     properties (Dependent)
         String;
+        UserData;
     end
     
     methods
@@ -18,6 +19,16 @@ classdef XTickLabelEntry < axesStringEntry
         end
         function set.String(l, s)
             l.ax.XTickLabel = s;
+        end
+        function u = get.UserData(l)
+            try
+                u = l.ax.UserData.XTickLabelEntryUserData;
+            catch
+                u = [];
+            end
+        end
+        function set.UserData(l, u)
+            l.ax.UserData.XTickLabelEntryUserData = u;
         end
     end
 

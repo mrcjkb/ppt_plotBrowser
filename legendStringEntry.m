@@ -8,6 +8,10 @@ classdef legendStringEntry < customStringEntry
     properties (Dependent)
         String;
         ParentPosition;
+        UserData;
+    end
+    properties (Dependent, SetAccess = 'protected')
+        SField;
     end
     
     methods
@@ -36,6 +40,19 @@ classdef legendStringEntry < customStringEntry
         end
         function set.ParentPosition(l, p)
             l.leg.Position = p; 
+        end
+        function u = get.UserData(l)
+            try
+                u = l.leg.UserData.legendStringEntryUserData.(l.SField);
+            catch
+                u = [];
+            end
+        end
+        function set.UserData(l, u)
+            l.leg.UserData.legendStringEntryUserData.(l.SField) = u;
+        end
+        function s = get.SField(l)
+            s = ['sidx_', num2str(l.sidx)];
         end
     end
     

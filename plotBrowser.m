@@ -248,6 +248,12 @@ classdef plotBrowser < handle
             cct = 1;
             for i = 1:nEl
                 obj = p.objList{i};
+                try
+                    hidden = obj.UserData.hidden;
+                catch
+                    hidden = false;
+                    obj.UserData.hidden = hidden;
+                end
                 if isempty(strfind(p.getElementName(obj), 'Menu')) % Leave out menu items
                     % Extend horizontally as needed for cleaner GUI look
                     % (Scrollbars cannot hold Matlab axes objects)
@@ -264,7 +270,10 @@ classdef plotBrowser < handle
                     % Create checkbox-visualization pairs in
                     % uiflowcontainers
                     cObj = p.uifc(cScroll(cct), 'RL', 'BackgroundColor', p.HTWGREY);
-                    [~, ~, ~, h] = p.JCheckBox(cObj, p.getElementName(obj));
+                    [j, ~, ~, h] = p.JCheckBox(cObj, p.getElementName(obj));
+                    if hidden
+                        j.setSelected(false)
+                    end
                     h.ActionPerformedCallback = @(src, evt) p.hideObj(src, evt, obj);
                     if strcmp(p.getElementName(obj), 'Axes')
                         % Create blank axes for axes objects
@@ -319,10 +328,12 @@ classdef plotBrowser < handle
         end
         function hideObj(p, src, ~, obj)
             % Un/hides the un/selected object
-            if src.isSelected % Delegate to selected state
-                p.state.show(obj)
+            if src.isSelected 
+                p.state.show(obj) % Delegate to selected state
+                obj.UserData.hidden = false; % Set UserData for UI initialization
             else
                 p.state.hide(obj)
+                obj.UserData.hidden = true;
             end
         end
         function browseCallback(p, ~, ~)

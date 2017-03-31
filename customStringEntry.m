@@ -2,15 +2,13 @@ classdef (Abstract) customStringEntry < handle
     %CUSTOMSTRINGENTRY: Abstract class for holding and manipulating custom string
     %entries in the plotBrowser class
     
-    properties
-       UserData; 
-    end
     properties (Dependent)
         Visible;
     end
     properties (Abstract, Dependent)
         String;
         ParentPosition;
+        UserData;
     end
     properties (Hidden, Access = 'protected')
         origString = '';
@@ -37,15 +35,15 @@ classdef (Abstract) customStringEntry < handle
             end
         end
         function setVisible(l, s)
+            pos = l.ParentPosition;
             if strcmp(s, 'on')
                 l.String = l.origString;
             else
-                pos = l.ParentPosition;
                 l.origString = l.String;
                 str = ['{', repmat(' ', 1, numel(l.origString)), '}'];
                 l.String = str;
-                l.ParentPosition = pos;
             end
+            l.ParentPosition = pos;
         end
     end
     

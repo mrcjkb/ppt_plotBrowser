@@ -6,6 +6,7 @@ classdef titleEntry < axesStringEntry
     end
     properties (Dependent)
         String;
+        UserData;
     end
     
     methods
@@ -18,6 +19,16 @@ classdef titleEntry < axesStringEntry
         end
         function set.String(l, s)
             l.ax.Title.String = s;
+        end
+        function u = get.UserData(l)
+            try
+                u = l.ax.UserData.titleEntryUserData;
+            catch
+                u = [];
+            end
+        end
+        function set.UserData(l, u)
+            l.ax.UserData.titleEntryUserData = u;
         end
     end
     

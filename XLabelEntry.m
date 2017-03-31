@@ -6,6 +6,7 @@ classdef XLabelEntry < axesStringEntry
     end
     properties (Dependent)
         String;
+        UserData;
     end
     
     methods
@@ -18,6 +19,16 @@ classdef XLabelEntry < axesStringEntry
         end
         function set.String(l, s)
             l.ax.XLabel.String = s;
+        end
+        function u = get.UserData(l)
+            try
+                u = l.ax.UserData.XLabelEntryUserData;
+            catch
+                u = [];
+            end
+        end
+        function set.UserData(l, u)
+            l.ax.UserData.XLabelEntryUserData = u;
         end
     end
     

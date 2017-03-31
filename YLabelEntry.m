@@ -6,6 +6,7 @@ classdef YLabelEntry < axesStringEntry
     end
     properties (Dependent)
         String;
+        UserData;
     end
     
     methods
@@ -18,6 +19,16 @@ classdef YLabelEntry < axesStringEntry
         end
         function set.String(l, s)
             l.ax.YLabel.String = s;
+        end
+        function u = get.UserData(l)
+            try
+                u = l.ax.UserData.YLabelEntryUserData;
+            catch
+                u = [];
+            end
+        end
+        function set.UserData(l, u)
+            l.ax.UserData.YLabelEntryUserData = u;
         end
     end
     
