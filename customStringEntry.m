@@ -30,7 +30,7 @@ classdef (Abstract) customStringEntry < handle
     
     methods (Access = 'protected')
         function s = getVisible(l)
-            if isempty(l.String)
+            if strcmp(strrep(l.String, ' ', ''), '{}')
                 s = 'off';
             else
                 s = 'on';
@@ -42,7 +42,8 @@ classdef (Abstract) customStringEntry < handle
             else
                 pos = l.ParentPosition;
                 l.origString = l.String;
-                l.String = '';
+                str = ['{', repmat(' ', 1, numel(l.origString)), '}'];
+                l.String = str;
                 l.ParentPosition = pos;
             end
         end
