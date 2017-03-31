@@ -1,4 +1,4 @@
-classdef XLabelEntry < customStringEntry
+classdef XLabelEntry < axesStringEntry
     %YLABELENTRY: For manipulation of YLabel strings in plotBrowser class
     
     properties

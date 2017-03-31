@@ -10,6 +10,7 @@ classdef (Abstract) customStringEntry < handle
     end
     properties (Abstract, Dependent)
         String;
+        ParentPosition;
     end
     properties (Hidden, Access = 'protected')
         origString = '';
@@ -29,7 +30,7 @@ classdef (Abstract) customStringEntry < handle
     
     methods (Access = 'protected')
         function s = getVisible(l)
-            if strcmp(strrep(l.String, char(3), ''), '')
+            if isempty(l.String)
                 s = 'off';
             else
                 s = 'on';
@@ -39,9 +40,10 @@ classdef (Abstract) customStringEntry < handle
             if strcmp(s, 'on')
                 l.String = l.origString;
             else
+                pos = l.ParentPosition;
                 l.origString = l.String;
-                str = repmat(char(3), 1, numel(l.origString));
-                l.String = str;
+                l.String = '';
+                l.ParentPosition = pos;
             end
         end
     end

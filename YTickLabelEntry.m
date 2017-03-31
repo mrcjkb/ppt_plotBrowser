@@ -1,4 +1,4 @@
-classdef YTickLabelEntry < TickLabelEntry
+classdef YTickLabelEntry < axesStringEntry
     %YTICKLABELENTRY: For manipulation of YTickLabel strings in plotBrowser class
     
     properties

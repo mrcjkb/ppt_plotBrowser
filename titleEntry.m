@@ -1,4 +1,4 @@
-classdef titleEntry < customStringEntry
+classdef titleEntry < axesStringEntry
     %TITLEENTRY: For manipulation of title strings in plotBrowser class
     
     properties

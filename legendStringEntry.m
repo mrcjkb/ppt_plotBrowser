@@ -7,6 +7,7 @@ classdef legendStringEntry < customStringEntry
     end
     properties (Dependent)
         String;
+        ParentPosition;
     end
     
     methods
@@ -29,6 +30,12 @@ classdef legendStringEntry < customStringEntry
         end
         function set.String(l, s)
             l.leg.String{l.sidx} = s; 
+        end
+        function p = get.ParentPosition(l)
+            p = l.leg.Position;
+        end
+        function set.ParentPosition(l, p)
+            l.leg.Position = p; 
         end
     end
     
