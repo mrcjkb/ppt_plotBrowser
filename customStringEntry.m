@@ -4,14 +4,12 @@ classdef (Abstract) customStringEntry < handle
     
     properties (Dependent)
         Visible;
+        origString;
     end
     properties (Abstract, Dependent)
         String;
         ParentPosition;
         UserData;
-    end
-    properties (Hidden, Access = 'protected')
-        origString = '';
     end
     
     methods
@@ -23,6 +21,16 @@ classdef (Abstract) customStringEntry < handle
         end
         function set.Visible(l, s)
             l.setVisible(s)
+        end
+        function o = get.origString(l)
+            o = l.UserData.origString;
+        end
+        function set.origString(l, o)
+            if isempty(l.UserData) || ...
+                    isempty(l.UserData.origString) || ...
+                    all(strcmp(strrep(l.UserData.origString, ' ', ''), '{}')) 
+                l.UserData.origString = o;
+            end
         end
     end
     

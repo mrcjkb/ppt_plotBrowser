@@ -293,7 +293,11 @@ classdef plotBrowser < handle
                                 cobj.Position(1) = 0;
                                 cobj.Position(2) = .5;
                             end
-                        catch
+                        catch ME
+                            sc = superclasses(obj);
+                            if strcmp(sc{end-1}, 'customStringEntry')
+                                rethrow(ME)
+                            end
                         end
                     end
                 end
