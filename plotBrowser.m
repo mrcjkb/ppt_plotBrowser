@@ -58,21 +58,21 @@ classdef plotBrowser < handle
     
     methods
         function p = plotBrowser(h)
-            if ~usejava('swing') || ~usejava('awt')
+            if ~usejava('swing') || ~usejava('awt') % Check if required java packages are installed
                 error('java swing and awt packages are missing.')
             end
-            if nargin == 0
+            if nargin == 0 % Apply to current figure if none specified
                 h = findobj(0, 'type', 'figure');
                 if numel(h) > 1
                     h = gcf;
                 end
             end
-            if ~isa(h, 'matlab.ui.Figure') && ~isa(h, 'matlab.graphics.axis.Axes')
-                error('Input argument h must be a figure or an axes handle')
+            if ~isa(h, 'matlab.ui.Figure') % Check for correct input
+                error('Input argument h must be a figure handle')
             elseif isempty(h)
                 error('Input argument h points to a deleted graphics object.')
             elseif strcmp(h.Tag, 'plotBrowser')
-                % Find figure that is not plotBrowser
+                % Find figure that is not a plotBrowser GUI frame
                 h = findobj(0, 'type', 'figure');
                 for i = 1:numel(h)
                     if ~strcmp(h(i).Tag, 'plotBrowser')
@@ -83,17 +83,22 @@ classdef plotBrowser < handle
             end
             p.hndl = h;
             p.axes_obj = findall(h, 'type', 'axes');
+            % Initialize GUI
             p.frame = figure('WindowStyle', 'normal', 'NumberTitle', 'off', ...
                 'CloseRequestFcn', @p.deleteCallback, 'MenuBar', 'none', ...
                 'Color', [1 1 1]);
             p.frame.Tag = 'plotBrowser';
             p.refreshUI
+            % Set ButtonDownFcn to refresh UI so that changes to the figure
+            % are applied.
             p.frame.ButtonDownFcn = @(src, evt) refreshUI(p, src, evt);
             p.frame.WindowButtonDownFcn	= p.frame.ButtonDownFcn;
             p.states = {plotBrowserColorState(p); plotBrowserVisibleState(p)};
-            p.state = p.states{1};
+            p.state = p.states{1}; % Initialize state
         end
         function deleteCallback(p, src, ~)
+            % Reset closereq function, close figure and delete plotBrowser
+            % object
             src.CloseRequestFcn = 'closereq';
             close(src)
             delete(p)
@@ -103,6 +108,7 @@ classdef plotBrowser < handle
     methods (Hidden)
         % Callbacks
         function correctFileName(p, src, ~)
+            % Remove invalid characters from file name input
             txt = char(src.getText);
             invalids = '[\~!@#$€%^&(){}]]';
             for i = 1:numel(invalids)
@@ -112,6 +118,7 @@ classdef plotBrowser < handle
             p.filename = txt;
         end
         function correctNumber(p, src, ~)
+            % Remove invalid characters from counter input
             txt = char(src.getText);
             txt = regexprep(txt, '[^\d]', '');
             src.setText(txt);
@@ -121,7 +128,7 @@ classdef plotBrowser < handle
     
     methods (Access = 'protected')
         function refreshUI(p, ~, ~)
-            if ~isvalid(p.hndl)
+            if ~isvalid(p.hndl) % Make sure handle is still valid and close GUI if not
                 warning('Figure has been deleted.')
                 close(p.frame)
                 return;
@@ -134,39 +141,45 @@ classdef plotBrowser < handle
             p.initListUI(p.main)
         end
         function initFrameName(p)
+            % Initializes the GUI frame's title bar.
             h = p.hndl;
-            try
-                if isempty(h.Name)
-                    p.frame.Name = ['plotBrowser: Figure ', num2str(h.Number)];
-                else
-                    p.frame.Name = ['plotBrowser: ', h.Name];
-                end
-            catch
-                % h = axes object
+            if isempty(h.Name) % Figure has no name --> init with figure number
+                p.frame.Name = ['plotBrowser: Figure ', num2str(h.Number)];
+            else
+                p.frame.Name = ['plotBrowser: ', h.Name];
             end
         end
         function initControlUI(p, component)
+            % Initializes the GUI for exporting the images and setting the
+            % state
             import javax.swing.* java.awt.*
-            ctrl = p.uifc(component, 'TD');
+            ctrl = p.uifc(component, 'TD'); % uiflowcontainer for controls
+            % uiflowcontainers for control pairs
             cFilename = p.uifc(ctrl, 'LR', 'BackgroundColor', p.HTWGREY);
             cCounter = p.uifc(ctrl, 'LR', 'BackgroundColor', p.HTWGREY);
             cPath = p.uifc(ctrl, 'LR', 'BackgroundColor', p.HTWGREY);
             cHideMode = p.uifc(ctrl, 'TD', 'BackgroundColor', p.HTWGREY);
+            % File name
             p.JLabel(cFilename, 'Name:');
             [p.fileName, ~, ~, h] = p.JTextPane(cFilename, p.filename);
             h.KeyTypedCallback = @(src, evt) correctFileName(p, src, evt);
+            % File Extension selector
             [p.fileExt, ~, ~, h] = p.JComboBox(cFilename, p.PRINTFIGEXT);
             p.fileExt.setSelectedIndex(p.extID)
             h.ActionPerformedCallback = @(src, evt) setExtID(p, src, evt);
+            % Export counter
             p.JLabel(cCounter, 'Number:');
             [p.counter, ~, ~, h] = p.JTextPane(cCounter, p.num);
             h.KeyTypedCallback = @(src, evt) correctNumber(p, src, evt);
+            % File chooser for save location
             [~, ~, ~, h] = p.JButton(cPath, 'Browse...');
             h.ActionPerformedCallback = @p.browseCallback;
             path = strrep(p.pathname, [fileparts(fileparts(p.pathname)), '\'], '');
             p.filePath = p.JLabel(cPath, path);
+            % Export button
             [~, ~, ~, h] = p.JButton(ctrl, 'Export');
             h.ActionPerformedCallback = @p.export;
+            % Color chooser (only enabled for custom color state)
             [p.colorButton, ~, ~, h] = p.JButton(cHideMode, 'BackgroundColor');
             if isempty(p.colorButtonState_Color)
                 p.colorButtonState_Color = Color.WHITE;
@@ -175,7 +188,8 @@ classdef plotBrowser < handle
             p.colorButton.setBackground(p.colorButtonState_Color)
             p.colorButton.setEnabled(p.colorButtonState_Enabled) 
             h.ActionPerformedCallback = @p.chooseColor;
-            [j, ~, ~, h] = p.JList(cHideMode, {'Color', 'Custom Color', 'Visible'});
+            % State selector
+            [j, ~, ~, h] = p.JScrollList(cHideMode, {'Color: ''none''', 'Custom Color', 'Visible'});
             j.setSelectedIndex(p.stateIDX)
             h.ValueChangedCallback = @p.switchState;
         end
@@ -412,11 +426,13 @@ classdef plotBrowser < handle
                 h = handle(j, 'CallbackProperties');
             end
         end
-        function [j, hcomponent, hcontainer, h] = JList(container, str)
+        function [j, hcomponent, hcontainer, h] = JScrollList(container, str)
             import javax.swing.* java.awt.*
             j = JList(str);
             j.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            [hcomponent, hcontainer] = javacomponent(j, [], container);
+            jsp = JScrollPane;
+            jsp.setViewportView(j)
+            [hcomponent, hcontainer] = javacomponent(jsp, [], container);
             if nargout == 4
                 h = handle(j, 'CallbackProperties');
             end
