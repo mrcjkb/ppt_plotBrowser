@@ -194,19 +194,21 @@ classdef plotBrowser < handle
             h.ValueChangedCallback = @p.switchState;
         end
         function initListUI(p, component, varargin)
+            % Intitializes the list of graphics objects to be shown/hidden
             import javax.swing.* java.awt.*
-            if nargin > 2
+            if nargin > 2 % Delete graphics object visualizations from GUI if called as callback
                 c = p.cObjects.Children;
                 for i = 1:numel(c)
                     delete(c(i))
                 end
-            else
-                p.cObjects = p.uifc(component, 'LR');
+            else % First initialization
+                p.cObjects = p.uifc(component, 'LR'); % Main uiflowcontainer
             end
-            cScroll = p.uifc(p.cObjects, 'TD');
+            cScroll = p.uifc(p.cObjects, 'TD'); % Array of sub-containers
             h = p.hndl;
-            obj = findobj(h);
-            obj = obj(2:end);
+            obj = findobj(h); % all graphics objects
+            obj = obj(2:end); % Remove figure & menu objects
+            % Remove empty text elements from list
             ind = true(size(obj));
             for i = 1:numel(obj)
                 if isa(obj(i), 'matlab.graphics.primitive.Text') && isempty(obj(i).String)
@@ -214,14 +216,15 @@ classdef plotBrowser < handle
                 end
             end
             obj = obj(ind);
+            % Add legend strings via legendStringEntry Adapter classes
             leg = findobj(h, 'type', 'legend');
             if ~isempty(leg)
                 add = numel(leg.String);
             else
                 add = 0;
             end
-            nEl = numel(obj) + add;
-            p.objList = cell(nEl, 1);
+            nEl = numel(obj) + add; % Number of elements
+            p.objList = cell(nEl, 1); % Init object list property
             for i = 1:numel(obj)
                 p.objList{i} = obj(i);
             end
@@ -237,11 +240,15 @@ classdef plotBrowser < handle
             nEl = p.addCustomEntries('YLabel', @YLabelEntry, nEl);
             nEl = p.addCustomEntries('YTickLabel', @YTickLabelEntry, nEl);
             nEl = p.addCustomEntries('XTickLabel', @XTickLabelEntry, nEl);
+            % Loop through object list and create check marks and
+            % vizualizations
             ct = 0;
             cct = 1;
             for i = 1:nEl
                 obj = p.objList{i};
-                if isempty(strfind(p.getElementName(obj), 'Menu'))
+                if isempty(strfind(p.getElementName(obj), 'Menu')) % Leave out menu items
+                    % Extend horizontally as needed for cleaner GUI look
+                    % (Scrollbars cannot hold Matlab axes objects)
                     ct = ct + 1;
                     if ct > nEl / 2 && mod(nEl, 2) == 0 || ...
                             ct > nEl / 3 && nEl > 14 || ...
@@ -252,12 +259,16 @@ classdef plotBrowser < handle
                         cct = cct + 1;
                         cScroll(cct) = p.uifc(component, 'TD');
                     end
+                    % Create checkbox-visualization pairs in
+                    % uiflowcontainers
                     cObj = p.uifc(cScroll(cct), 'RL', 'BackgroundColor', p.HTWGREY);
                     [~, ~, ~, h] = p.JCheckBox(cObj, p.getElementName(obj));
                     h.ActionPerformedCallback = @(src, evt) p.hideObj(src, evt, obj);
                     if strcmp(p.getElementName(obj), 'Axes')
+                        % Create blank axes for axes objects
                         axes(cObj, 'Box', 'on', 'FontSize', 5);
                     else
+                        % Copy other objects for vizualization
                         ax = axes(cObj); %#ok<*LAXES>
                         ax.YTick = [];
                         ax.XTick = [];
@@ -278,20 +289,24 @@ classdef plotBrowser < handle
             end
         end
         function setExtID(p, src, ~)
+            % Stores selected extension index for UI refreshes
             p.extID = src.getSelectedIndex;
         end
         function export(p, ~, ~)
+            % Exports figure to image file
             if isempty(which('printfig'))
                 waitfor(msgbox(['The printfig function is required for exporting. ', ...
                     'It can be downloaded from: https://github.com/MrcJkb/printfig.git'], 'Error', 'ERROR'))
                 return;
             end
-            figure(p.hndl)
+            figure(p.hndl) % Switch to referenced figure from plotBrowser GUI
+            % Retrieve required info from UI
             p.num = char(p.counter.getText);
             ff = fullfile(p.pathname, [p.filename, p.num]);
             ext = p.PRINTFIGEXT{p.fileExt.getSelectedIndex + 1};
-            printfig(p.hndl, ff, ext(2:end))
-            figure(p.frame)
+            printfig(p.hndl, ff, ext(2:end)) % print figure
+            figure(p.frame) % Switch back to plotBrowser GUI
+            % Increment counter
             fnum = str2double(p.num) + 1;
             if fnum < 10
                 p.num = ['0', num2str(fnum)];
@@ -301,13 +316,17 @@ classdef plotBrowser < handle
             p.counter.setText(p.num)
         end
         function hideObj(p, src, ~, obj)
-            if src.isSelected
+            % Un/hides the un/selected object
+            if src.isSelected % Delegate to selected state
                 p.state.show(obj)
             else
                 p.state.hide(obj)
             end
         end
         function browseCallback(p, ~, ~)
+            % Calls a file chooser that can be used for browsing to the
+            % save destination path and stores the selected data for
+            % exporting.
             filterSpec = cellfun(@(x) ['*', x], p.PRINTFIGEXT, 'un', false);
             [p.filename, p.pathname, fidx] = uiputfile(filterSpec, 'Save as');
             try
@@ -318,10 +337,11 @@ classdef plotBrowser < handle
                 p.fileExt.setSelectedIndex(fidx - 1)
                 p.correctFileName(p.fileName)
             catch
-                % cancelled
+                % In case cancel button was clicked
             end
         end
         function chooseColor(p, src, ~)
+            % Opens a color picker.
             cc = com.mathworks.mlwidgets.graphics.ColorDialog('Choose the hidden color');
             color = cc.showDialog([]);
             try
@@ -335,6 +355,7 @@ classdef plotBrowser < handle
             end
         end
         function switchState(p, src, ~)
+            % Callback for switching the State
             p.stateIDX = src.getSelectedIndex;
             if  p.stateIDX == 1 % Custom Color
                 p.colorButton.setEnabled(true)
@@ -350,6 +371,7 @@ classdef plotBrowser < handle
             end
         end
         function nEl = addCustomEntries(p, type, typeHandle, n0)
+            % Function for adding object adapters
             t = findobj(p.hndl, '-property', type);
             ct = 1;
             cct = n0;
@@ -367,6 +389,7 @@ classdef plotBrowser < handle
     
     methods (Hidden, Static)
         function u = uifc(parent, flowdirection, varargin)
+            % Wrapper for simplifying the uiflowcontainer syntax
             if strcmp(flowdirection, 'LR')
                 flowdirection = 'LeftToRight';
             elseif strcmp(flowdirection, 'RL')
@@ -380,6 +403,7 @@ classdef plotBrowser < handle
                 'FlowDirection', flowdirection, 'BackgroundColor', [1 1 1], ...
                 varargin{:});
         end
+        % Wrappers for Java swing classes adapted to Matlab
         function [j, hcomponent, hcontainer] = JLabel(container, str)
             import javax.swing.* java.awt.*
             j = JLabel;
@@ -427,6 +451,7 @@ classdef plotBrowser < handle
             end
         end
         function [j, hcomponent, hcontainer, h] = JScrollList(container, str)
+            % JList wrapped by a JScrollPane
             import javax.swing.* java.awt.*
             j = JList(str);
             j.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -442,6 +467,8 @@ classdef plotBrowser < handle
     
     methods (Static)
         function s = getElementName(obj)
+            % Returns a graphics object (or wrapper's) name for display
+            % next to the check boxes.
             if isgraphics(obj)
                 type = class(obj);
                 ind = strfind(type, '.') + 1;
