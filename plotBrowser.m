@@ -13,8 +13,16 @@ classdef plotBrowser < handle
     %Author: Marc Jakobi
     %        23.03.2017
     %
+    %Required functions:
+    %
+    %   - printfig: For Export feature. Available at: https://github.com/MrcJkb/printfig.git
+    %
     %SEE ALSO: plotbrowser
+    
     properties
+        %Cell array of the graphics objects
+        %(and plotBrowser customStringEntry subclasses) that can be
+        %hidden/shown by the plotBrowser GUI.
         objList;
     end
     properties (Hidden, Access = 'protected')
@@ -43,9 +51,9 @@ classdef plotBrowser < handle
         hiddenColor = 'none'; % background color
     end
     properties (Hidden, Constant)
-        HTWGREY = [175 175 175]/255;
+        HTWGREY = [175 175 175]/255; % Used as backround color for GUI
         PRINTFIGEXT = {'.emf'; '.eps'; '.bmp'; '.jpg'; '.tiff';...
-            '.pdf'; '.png'; '.fig'; '.svg'};
+            '.pdf'; '.png'; '.fig'; '.svg'}; % Printfig 
     end
     
     methods
@@ -138,7 +146,6 @@ classdef plotBrowser < handle
             end
         end
         function initControlUI(p, component)
-            % MTODO: Export button
             import javax.swing.* java.awt.*
             ctrl = p.uifc(component, 'TD');
             cFilename = p.uifc(ctrl, 'LR', 'BackgroundColor', p.HTWGREY);
@@ -260,6 +267,11 @@ classdef plotBrowser < handle
             p.extID = src.getSelectedIndex;
         end
         function export(p, ~, ~)
+            if isempty(which('printfig'))
+                waitfor(msgbox(['The printfig function is required for exporting. ', ...
+                    'It can be downloaded from: https://github.com/MrcJkb/printfig.git'], 'Error', 'ERROR'))
+                return;
+            end
             figure(p.hndl)
             p.num = char(p.counter.getText);
             ff = fullfile(p.pathname, [p.filename, p.num]);
