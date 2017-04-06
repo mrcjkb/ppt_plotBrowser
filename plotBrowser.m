@@ -46,6 +46,7 @@ classdef plotBrowser < handle
         colorButtonState_Color;
         colorButtonState_Enabled = false;
         stateIDX = 0;
+        tabgp; % uitabgroup
     end
     properties (Hidden)
         hiddenColor = 'none'; % background color
@@ -138,12 +139,26 @@ classdef plotBrowser < handle
                 close(p.frame)
                 return;
             end
+            if nargin > 1
+                selectedTab = str2double(p.tabgp.SelectedTab.Tag);
+            end
             delete(p.main) % force garbage collection to prevent memory leaks
             p.main =  p.uifc(p.frame, 'LR', 'Units', 'norm', 'Position', ...
                 [.05, .05, .9, .9]);
             p.initFrameName
             p.initControlUI(p.main)
-            p.initListUI(p.main)
+            p.tabgp = uitabgroup(p.main);
+            plist = uitab(p.tabgp, 'Title', 'plot browser', 'Tag', '1');
+            pctrl2 = uitab(p.tabgp, 'Title', 'other tools', 'Tag', '2');
+            if nargin > 1
+                if selectedTab == 1
+                    p.tabgp.SelectedTab = plist;
+                else
+                    p.tabgp.SelectedTab = pctrl2;
+                end
+            end
+            p.initListUI(plist)
+            p.initCtrl2UI(pctrl2)
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
@@ -305,6 +320,10 @@ classdef plotBrowser < handle
                     end
                 end
             end
+        end
+        function initCtrl2UI(p, component, varargin)
+           % MTODO: Write function for initializing additional tools
+           % MTODO: Copy new expandaxes update to server
         end
         function setExtID(p, src, ~)
             % Stores selected extension index for UI refreshes
