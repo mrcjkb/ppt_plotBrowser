@@ -149,7 +149,7 @@ classdef plotBrowser < handle
             p.initControlUI(p.main)
             p.tabgp = uitabgroup(p.main);
             plist = uitab(p.tabgp, 'Title', 'plot browser', 'Tag', '1');
-            pctrl2 = uitab(p.tabgp, 'Title', 'other tools', 'Tag', '2');
+            pctrl2 = uitab(p.tabgp, 'Title', 'export setup', 'Tag', '2');
             if nargin > 1
                 if selectedTab == 1
                     p.tabgp.SelectedTab = plist;
