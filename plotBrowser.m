@@ -58,6 +58,9 @@ classdef plotBrowser < handle
     
     methods
         function p = plotBrowser(h)
+            if verLessThan('matlab', '9.0') % Verify Matlab version (R2016a and above)
+                error('Matlab R2016a or above required to run this tool.')
+            end
             if ~usejava('swing') || ~usejava('awt') % Check if required java packages are installed
                 error('java swing and awt packages are missing.')
             end
