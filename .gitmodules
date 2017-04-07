@@ -1,0 +1,3 @@
+[submodule "printfig"]
+	path = printfig
+	url = https://github.com/MrcJkb/printfig.git
