@@ -16,6 +16,8 @@ classdef plotBrowser < handle
     %Required functions:
     %
     %   - printfig: For Export feature. Available at: https://github.com/MrcJkb/printfig.git
+    %   - expandaxes: For Export setup feature.
+    %   - spidentify: For Export setup feature.
     %
     %SEE ALSO: plotbrowser
     
@@ -24,6 +26,7 @@ classdef plotBrowser < handle
         %(and plotBrowser customStringEntry subclasses) that can be
         %hidden/shown by the plotBrowser GUI.
         objList;
+        hndl; % Handle to figure or axes being browsed.
     end
     properties (Hidden, Access = 'protected')
         frame; % GUI frame.
@@ -36,7 +39,6 @@ classdef plotBrowser < handle
         cObjects;
         states;
         state;
-        hndl; % Handle to figure or axes being browsed.
         axes_obj;
         main;
         num  = '01'; % file number as string
@@ -123,12 +125,11 @@ classdef plotBrowser < handle
             src.setText(txt)
             p.filename = txt;
         end
-        function correctNumber(p, src, ~)
+        function correctNumber(~, src, ~)
             % Remove invalid characters from counter input
             txt = char(src.getText);
             txt = regexprep(txt, '[^\d]', '');
             src.setText(txt);
-            p.num = txt;
         end
     end
     
@@ -141,6 +142,8 @@ classdef plotBrowser < handle
             end
             if nargin > 1
                 selectedTab = str2double(p.tabgp.SelectedTab.Tag);
+            else
+                selectedTab = 1;
             end
             delete(p.main) % force garbage collection to prevent memory leaks
             p.main =  p.uifc(p.frame, 'LR', 'Units', 'norm', 'Position', ...
@@ -150,19 +153,15 @@ classdef plotBrowser < handle
             p.tabgp = uitabgroup(p.main);
             plist = uitab(p.tabgp, 'Title', 'plot browser', 'Tag', '1');
             pctrl2 = uitab(p.tabgp, 'Title', 'export setup', 'Tag', '2');
-            if nargin > 1
-                if selectedTab == 1
-                    p.tabgp.SelectedTab = plist;
-                else
-                    p.tabgp.SelectedTab = pctrl2;
-                end
+            if selectedTab == 1
+                p.tabgp.SelectedTab = plist;
+                plist_uifc = p.uifc(plist, 'LR'); % Wrap uitab in uiflowcontainer
+                p.initListUI(plist_uifc) % Initialize UI elements
+            else
+                p.tabgp.SelectedTab = pctrl2;
+                pctrl2_uifc = p.uifc(pctrl2, 'TD');
+                p.initCtrl2UI(pctrl2_uifc)
             end
-            % Wrap uitabs in uiflowcontainers
-            plist_uifc = p.uifc(plist, 'LR');
-            pctrl2_uifc = p.uifc(pctrl2, 'TD');
-            % Initialize UI elements for tabs
-            p.initListUI(plist_uifc)
-            p.initCtrl2UI(pctrl2_uifc)
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
@@ -194,7 +193,7 @@ classdef plotBrowser < handle
             % Export counter
             p.JLabel(cCounter, 'Number:');
             [p.counter, ~, ~, h] = p.JTextPane(cCounter, p.num);
-            h.KeyTypedCallback = @(src, evt) correctNumber(p, src, evt);
+            h.KeyTypedCallback = @(src, evt) setFileNum(p, src, evt);
             % File chooser for save location
             [~, ~, ~, h] = p.JButton(cPath, 'Browse...');
             h.ActionPerformedCallback = @p.browseCallback;
@@ -327,8 +326,47 @@ classdef plotBrowser < handle
             end
         end
         function initCtrl2UI(p, component, varargin)
-           % MTODO: Write function for initializing additional tools
-           % MTODO: Copy new expandaxes update to server
+            % MTODO: Write function for initializing additional tools
+            p.initExpandaxesUI(component, varargin)
+        end
+        function initExpandaxesUI(p, component, varargin)
+            % MTODO: Copy new expandaxes update to server
+            cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
+            [j, ~, ~, h] = p.JCheckBox(cObj, 'expandaxes');
+            fHor = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
+            fVer = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
+            fhorL = p.JLabel(fHor, 'fHor:');
+            fverL = p.JLabel(fVer, 'fVer:');
+            % fhor and fver presets are stored in figure's UserData
+            [~, ~, nHor, nVer] = spidentify(p.hndl); % MTODO: Move spidentify to GitHub
+            try fhor = p.hndl.UserData.plotBrowserData.fhor; catch; fhor = 1; end
+            try fver = p.hndl.UserData.plotBrowserData.fver; catch; fver = 1; end
+            [fh, ~, ~, h] = p.JTextPane(fHor, num2str(fhor));
+            if nHor == 1 % Disable params if only 1 axes in horizontal direction
+                fhorL.setEnabled(false)
+                fh.setEnabled(false)
+            end
+            h.KeyTypedCallback = @(src, evt) setFHor(p, src, evt);
+            [fv, ~, ~, h] = p.JTextPane(fVer, num2str(fver));
+            if nVer == 1 % Disable params if only 1 axes in vertical direction
+                fverL.setEnabled(false)
+                fv.setEnabled(false)
+            end
+            h.KeyTypedCallback = @(src, evt) setFVer(p, src, evt);
+        end
+        function setFHor(p, src, evt)
+            % Stores fhor preset in figure's UserData
+            p.correctNumber(src, evt)
+            p.hndl.UserData.plotBrowserData.fhor = str2double(char(src.getText));
+        end
+        function setFVer(p, src, evt)
+            % Stores fver preset in figure's UserData
+            p.correctNumber(src, evt)
+            p.hndl.UserData.plotBrowserData.fver = str2double(char(src.getText));
+        end
+        function setFileNum(p, src, evt)
+            p.correctNumber(src, evt)
+            p.num = char(src.getText);
         end
         function setExtID(p, src, ~)
             % Stores selected extension index for UI refreshes
