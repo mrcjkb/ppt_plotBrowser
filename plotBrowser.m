@@ -157,8 +157,12 @@ classdef plotBrowser < handle
                     p.tabgp.SelectedTab = pctrl2;
                 end
             end
-            p.initListUI(plist)
-            p.initCtrl2UI(pctrl2)
+            % Wrap uitabs in uiflowcontainers
+            plist_uifc = p.uifc(plist, 'LR');
+            pctrl2_uifc = p.uifc(pctrl2, 'TD');
+            % Initialize UI elements for tabs
+            p.initListUI(plist_uifc)
+            p.initCtrl2UI(pctrl2_uifc)
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
