@@ -93,13 +93,13 @@ classdef plotBrowser < handle
                 'CloseRequestFcn', @p.deleteCallback, 'MenuBar', 'none', ...
                 'Color', [1 1 1]);
             p.frame.Tag = 'plotBrowser';
+            p.states = {plotBrowserColorState(p); plotBrowserVisibleState(p)};
+            p.state = p.states{1}; % Initialize state
             p.refreshUI
             % Set ButtonDownFcn to refresh UI so that changes to the figure
             % are applied.
             p.frame.ButtonDownFcn = @(src, evt) refreshUI(p, src, evt);
             p.frame.WindowButtonDownFcn	= p.frame.ButtonDownFcn;
-            p.states = {plotBrowserColorState(p); plotBrowserVisibleState(p)};
-            p.state = p.states{1}; % Initialize state
         end
         function deleteCallback(p, src, ~)
             % Reset closereq function, close figure and delete plotBrowser
@@ -290,6 +290,7 @@ classdef plotBrowser < handle
                         ax.XColor = 'none';
                         try
                             cobj = copyobj(obj, ax);
+                            p.setOrigColor(cobj);
                             % Move copied text so it can be displayed in
                             % plotBrowser
                             if strcmp(p.getElementName(obj), 'Text')
@@ -305,6 +306,9 @@ classdef plotBrowser < handle
                     end
                 end
             end
+        end
+        function setOrigColor(p, obj)
+            try p.state.show(obj); catch; end
         end
         function setExtID(p, src, ~)
             % Stores selected extension index for UI refreshes
