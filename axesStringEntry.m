@@ -14,5 +14,23 @@ classdef axesStringEntry < customStringEntry
         end
     end
     
+    methods (Access = 'protected')
+        function setVisible(l, s)
+            pos = l.getLabelPositions;
+            setVisible@customStringEntry(l, s)
+            l.setLabelPositions(pos)
+        end
+        function pos = getLabelPositions(l)
+            pos.Y = l.ax.YLabel.Position;
+            pos.X = l.ax.XLabel.Position;
+            pos.T = l.ax.Title.Position;
+        end
+        function setLabelPositions(l, pos)
+            l.ax.YLabel.Position = pos.Y;
+            l.ax.XLabel.Position = pos.X;
+            l.ax.Title.Position = pos.T;
+        end
+    end
+    
 end
 
