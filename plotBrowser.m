@@ -89,6 +89,7 @@ classdef plotBrowser < handle
                     end
                 end
             end
+            h.CloseRequestFcn = @p.deleteCallback;
             p.hndl = h;
             p.axes_obj = findall(h, 'type', 'axes');
             % Initialize GUI
@@ -107,8 +108,10 @@ classdef plotBrowser < handle
         function deleteCallback(p, src, ~)
             % Reset closereq function, close figure and delete plotBrowser
             % object
-            src.CloseRequestFcn = 'closereq';
+            p.hndl.CloseRequestFcn = 'closereq';
+            p.frame.CloseRequestFcn = 'closereq';
             close(src)
+            try close(p.frame); catch; end
             delete(p)
         end
     end
@@ -332,15 +335,30 @@ classdef plotBrowser < handle
         function initExpandaxesUI(p, component, varargin)
             % MTODO: Copy new expandaxes update to server
             cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
-            [j, ~, ~, h] = p.JCheckBox(cObj, 'expandaxes');
+            [~, ~, ~, hCheckBox] = p.JCheckBox(cObj, 'expandaxes');
+            try
+                fhor = p.hndl.UserData.plotBrowserData.fhor; 
+            catch
+                fhor = 1;
+                p.hndl.UserData.plotBrowserData.fhor = fhor;
+            end
+            try 
+                fver = p.hndl.UserData.plotBrowserData.fver; 
+            catch
+                fver = 1;
+                p.hndl.UserData.plotBrowserData.fver = fver;
+            end
+            AX = findobj(p.hndl, 'type', 'axes');
+            if ~strcmp(AX(1).Tag, 'expandedaxes')
+                hCheckBox.setSelected(false)
+            end
+            hCheckBox.ActionPerformedCallback = @(src, evt) p.expandaxes(src);
             fHor = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
             fVer = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
             fhorL = p.JLabel(fHor, 'fHor:');
             fverL = p.JLabel(fVer, 'fVer:');
             % fhor and fver presets are stored in figure's UserData
-            [~, ~, nHor, nVer] = spidentify(p.hndl); % MTODO: Move spidentify to GitHub
-            try fhor = p.hndl.UserData.plotBrowserData.fhor; catch; fhor = 1; end
-            try fver = p.hndl.UserData.plotBrowserData.fver; catch; fver = 1; end
+            [~, ~, nHor, nVer] = spidentify(p.hndl); % MTODO: Move spidentify to GitHub    
             [fh, ~, ~, h] = p.JTextPane(fHor, num2str(fhor));
             if nHor == 1 % Disable params if only 1 axes in horizontal direction
                 fhorL.setEnabled(false)
@@ -353,6 +371,15 @@ classdef plotBrowser < handle
                 fv.setEnabled(false)
             end
             h.KeyTypedCallback = @(src, evt) setFVer(p, src, evt);
+        end
+        function expandaxes(p, src)
+            % Wrapper for the expandaxes function
+            fhor = p.hndl.UserData.plotBrowserData.fhor;
+            fver = p.hndl.UserData.plotBrowserData.fver;
+            undo = ~src.isSelected;
+            f = p.hndl;
+            expandaxes(f, fhor, fver, 'Undo', undo)
+            % MTODO: Fix bug causing colorbar to disappear when called from this method (Canot be reproduced by using original expandaxes function)
         end
         function setFHor(p, src, evt)
             % Stores fhor preset in figure's UserData
