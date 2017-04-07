@@ -272,7 +272,7 @@ classdef plotBrowser < handle
                     hidden = false;
                     obj.UserData.hidden = hidden;
                 end
-                if isempty(strfind(p.getElementName(obj), 'Menu')) % Leave out menu items
+                if isempty(strfind(p.getElementName(obj), 'Menu')) %#ok<STREMP> % Leave out menu items
                     % Extend horizontally as needed for cleaner GUI look
                     % (Scrollbars cannot hold Matlab axes objects)
                     ct = ct + 1;
@@ -295,7 +295,7 @@ classdef plotBrowser < handle
                     h.ActionPerformedCallback = @(src, evt) p.hideObj(src, evt, obj);
                     if strcmp(p.getElementName(obj), 'Axes')
                         % Create blank axes for axes objects
-                        axes(cObj, 'Box', 'on', 'FontSize', 5);
+                        axes(cObj, 'Box', 'on', 'FontSize', 5, 'Color', [1 1 1]);
                     else
                         % Copy other objects for vizualization
                         ax = axes(cObj); %#ok<*LAXES>
@@ -303,6 +303,7 @@ classdef plotBrowser < handle
                         ax.XTick = [];
                         ax.YColor = 'none';
                         ax.XColor = 'none';
+                        ax.Color = [1 1 1];
                         try
                             cobj = copyobj(obj, ax);
                             % Move copied text so it can be displayed in
