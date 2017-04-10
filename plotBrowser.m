@@ -46,7 +46,6 @@ classdef plotBrowser < handle
         colorButtonState_Color;
         colorButtonState_Enabled = false;
         stateIDX = 0;
-        listeners;
         uiRefreshEnabled = true;
     end
     properties (Hidden)
