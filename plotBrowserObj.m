@@ -54,6 +54,9 @@ classdef plotBrowserObj < handle
         uiRefreshEnabled = true; % flag to enable/disable UI auto refresh
         plist_uifc; % uiflowcontainer for list uitab
         pctrl2_uifc; % uiflowcontainer for export setup uitab
+        desktopFontSelected = true; % for DesktopFontPicker
+        figureFontName = java.awt.Font.PLAIN;
+        figureFontSize = 11;
     end
     properties (Hidden)
         hiddenColor = 'none'; % background color
@@ -340,9 +343,24 @@ classdef plotBrowserObj < handle
 		function initCtrl2UI(p, component, varargin)
             % MTODO: Write function for initializing additional tools
             p.initExpandaxesUI(component, varargin)
+            p.initFontNameUI(component, varargin)
+        end
+        function initFontNameUI(p, component, varargin)
+            import java.awt.* javax.swing.*
+            % Initializes the FontName UI components
+            cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
+            fonts = listfonts;
+            obj = findall(p.hndl, '-property', 'FontName');
+            tf = ismember(fonts, obj(1).FontName);
+            fontStr = @(font) ['<html><font face="', font, '">', font, '</font></html>'];
+            htmlStr = cellfun(fontStr, fonts, 'un', false);
+            [j, ~, ~, h] = p.JComboBox(cObj, htmlStr);
+            j.setSelectedIndex(find(tf) - 1)
+            h.ActionPerformedCallback = @(src, evt) setFontName(p, src);
+            j.setToolTipText('Apply FontName to all text elements in figure.')
         end
         function initExpandaxesUI(p, component, varargin)
-            % MTODO: Copy new expandaxes update to server
+            % Initializes the expandaxes UI components
             cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
             [~, ~, ~, hCheckBox] = p.JCheckBox(cObj, 'expandaxes');
             try
@@ -361,6 +379,7 @@ classdef plotBrowserObj < handle
             if ~strcmp(AX(1).Tag, 'expandedaxes')
                 hCheckBox.setSelected(false)
             end
+            hCheckBox.setToolTipText('Expand axes to fill figure using expandaxes function.')
             hCheckBox.ActionPerformedCallback = @(src, evt) p.expandaxes(src);
             fHor = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
             fVer = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
@@ -369,17 +388,28 @@ classdef plotBrowserObj < handle
             % fhor and fver presets are stored in figure's UserData
             [~, ~, nHor, nVer] = spidentify(p.hndl); % MTODO: Move spidentify to GitHub    
             [fh, ~, ~, h] = p.JTextPane(fHor, num2str(fhor));
+            tttxt = 'Factor for distance between horizontally arranged subplots';
+            fh.setToolTipText(tttxt)
+            fhorL.setToolTipText(tttxt)
             if nHor == 1 % Disable params if only 1 axes in horizontal direction
                 fhorL.setEnabled(false)
                 fh.setEnabled(false)
             end
             h.KeyTypedCallback = @(src, evt) setFHor(p, src, evt);
             [fv, ~, ~, h] = p.JTextPane(fVer, num2str(fver));
+            tttxt = 'Factor for distance between vertically arranged subplots';
+            fv.setToolTipText(tttxt)
+            fverL.setToolTipText(tttxt)
             if nVer == 1 % Disable params if only 1 axes in vertical direction
                 fverL.setEnabled(false)
                 fv.setEnabled(false)
             end
             h.KeyTypedCallback = @(src, evt) setFVer(p, src, evt);
+        end
+        function setFontName(p, src)
+            fonts = listfonts;
+            fontname = fonts{src.getSelectedIndex + 1};
+            set(findall(p.hndl, '-property', 'FontName'), 'FontName', fontname)
         end
         function expandaxes(p, src)
             % Wrapper for the expandaxes function
