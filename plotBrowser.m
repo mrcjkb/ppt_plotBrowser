@@ -162,13 +162,13 @@ classdef plotBrowser < handle
             pctrl2 = uitab(p.tabgp, 'Title', 'export setup', 'Tag', '2');
             if selectedTab == 1
                 p.tabgp.SelectedTab = plist;
-                plist_uifc = p.uifc(plist, 'LR'); % Wrap uitab in uiflowcontainer
-                p.initListUI(plist_uifc) % Initialize UI elements
             else
                 p.tabgp.SelectedTab = pctrl2;
-                pctrl2_uifc = p.uifc(pctrl2, 'TD');
-                p.initCtrl2UI(pctrl2_uifc)
             end
+            plist_uifc = p.uifc(plist, 'LR'); % Wrap uitabs in uiflowcontainers
+            pctrl2_uifc = p.uifc(pctrl2, 'TD');
+            p.initListUI(plist_uifc) % Initialize UI elements
+            p.initCtrl2UI(pctrl2_uifc)
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
