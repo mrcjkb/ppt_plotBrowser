@@ -46,6 +46,8 @@ classdef plotBrowser < handle
         colorButtonState_Color;
         colorButtonState_Enabled = false;
         stateIDX = 0;
+        listeners;
+        uiRefreshEnabled = true;
     end
     properties (Hidden)
         hiddenColor = 'none'; % background color
@@ -96,10 +98,7 @@ classdef plotBrowser < handle
             p.states = {plotBrowserColorState(p); plotBrowserVisibleState(p)};
             p.state = p.states{1}; % Initialize state
             p.refreshUI
-            % Set ButtonDownFcn to refresh UI so that changes to the figure
-            % are applied.
-            p.frame.ButtonDownFcn = @(src, evt) refreshUI(p, src, evt);
-            p.frame.WindowButtonDownFcn	= p.frame.ButtonDownFcn;
+            p.addFigureListeners
         end
         function deleteCallback(p, src, ~)
             % Reset closereq function, close figure and delete plotBrowser
@@ -133,6 +132,12 @@ classdef plotBrowser < handle
     
     methods (Access = 'protected')
         function refreshUI(p, ~, ~)
+            % Callback for refreshing the plotBrowser UI using the Observer
+            % design pattern
+            if ~isvalid(p) || ~p.uiRefreshEnabled
+                return; % Prevents unwanted calls to this function
+            end
+            p.uiRefreshEnabled = false; % Disable UI refresh until current refresh is finished
             if ~isvalid(p.hndl) % Make sure handle is still valid and close GUI if not
                 warning('Figure has been deleted.')
                 close(p.frame)
@@ -144,6 +149,7 @@ classdef plotBrowser < handle
             p.initFrameName
             p.initControlUI(p.main)
             p.initListUI(p.main)
+            p.uiRefreshEnabled = true; % Re-enable UI refresh
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
@@ -339,6 +345,7 @@ classdef plotBrowser < handle
         end
         function hideObj(p, src, ~, obj)
             % Un/hides the un/selected object
+            p.uiRefreshEnabled = false;
             if src.isSelected 
                 p.state.show(obj) % Delegate to selected state
                 obj.UserData.hidden = false; % Set UserData for UI initialization
@@ -346,6 +353,7 @@ classdef plotBrowser < handle
                 p.state.hide(obj)
                 obj.UserData.hidden = true;
             end
+            p.uiRefreshEnabled = true;
         end
         function browseCallback(p, ~, ~)
             % Calls a file chooser that can be used for browsing to the
@@ -408,6 +416,23 @@ classdef plotBrowser < handle
                 ct = ct + 1;
             end
             nEl = numel(p.objList);
+        end
+        function addFigureListeners(p)
+            % Function for adding listeners to figure for updating
+            % plotBrowser UI using the Observer design pattern
+            chi = p.hndl.Children;
+            for c = 1:numel(chi)
+                obj = chi(c);
+                props = properties(obj);
+                for i = 1:numel(props)
+                    try
+                        callback = @(src, evt) refreshUI(p, src, evt);
+                        addlistener(obj, props{i}, 'PostSet', callback);
+                    catch
+                        % do nothing
+                    end
+                end
+            end
         end
     end
     
