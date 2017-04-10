@@ -1,3 +1,9 @@
 [submodule "printfig"]
 	path = printfig
 	url = https://github.com/MrcJkb/printfig.git
+[submodule "expandaxes"]
+	path = expandaxes
+	url = https://github.com/MrcJkb/expandaxes.git
+[submodule "spidentify"]
+	path = spidentify
+	url = https://github.com/MrcJkb/spidentify.git

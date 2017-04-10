@@ -16,6 +16,8 @@ classdef plotBrowser < handle
     %Required functions:
     %
     %   - printfig: For Export feature. Available at: https://github.com/MrcJkb/printfig.git
+    %   - expandaxes: For Export setup feature.
+    %   - spidentify: For Export setup feature.
     %
     %SEE ALSO: plotbrowser
     
@@ -24,6 +26,7 @@ classdef plotBrowser < handle
         %(and plotBrowser customStringEntry subclasses) that can be
         %hidden/shown by the plotBrowser GUI.
         objList;
+        hndl; % Handle to figure or axes being browsed.
     end
     properties (Hidden, Access = 'protected')
         frame; % GUI frame.
@@ -36,7 +39,6 @@ classdef plotBrowser < handle
         cObjects;
         states;
         state;
-        hndl; % Handle to figure or axes being browsed.
         axes_obj;
         main;
         num  = '01'; % file number as string
@@ -46,7 +48,8 @@ classdef plotBrowser < handle
         colorButtonState_Color;
         colorButtonState_Enabled = false;
         stateIDX = 0;
-        uiRefreshEnabled = true;
+		tabgp; % uitabgroup
+        uiRefreshEnabled = true; % flag to enable/disable UI auto refresh
     end
     properties (Hidden)
         hiddenColor = 'none'; % background color
@@ -87,6 +90,7 @@ classdef plotBrowser < handle
                     end
                 end
             end
+            h.CloseRequestFcn = @p.deleteCallback;
             p.hndl = h;
             p.axes_obj = findall(h, 'type', 'axes');
             % Initialize GUI
@@ -102,8 +106,10 @@ classdef plotBrowser < handle
         function deleteCallback(p, src, ~)
             % Reset closereq function, close figure and delete plotBrowser
             % object
-            src.CloseRequestFcn = 'closereq';
+            p.hndl.CloseRequestFcn = 'closereq';
+            p.frame.CloseRequestFcn = 'closereq';
             close(src)
+            try close(p.frame); catch; end
             delete(p)
         end
     end
@@ -120,12 +126,11 @@ classdef plotBrowser < handle
             src.setText(txt)
             p.filename = txt;
         end
-        function correctNumber(p, src, ~)
+        function correctNumber(~, src, ~)
             % Remove invalid characters from counter input
             txt = char(src.getText);
             txt = regexprep(txt, '[^\d]', '');
             src.setText(txt);
-            p.num = txt;
         end
     end
     
@@ -142,13 +147,28 @@ classdef plotBrowser < handle
                 close(p.frame)
                 return;
             end
+            if nargin > 1
+                selectedTab = str2double(p.tabgp.SelectedTab.Tag);
+            else
+                selectedTab = 1;
+            end
             delete(p.main) % force garbage collection to prevent memory leaks
             p.main =  p.uifc(p.frame, 'LR', 'Units', 'norm', 'Position', ...
                 [.05, .05, .9, .9]);
             p.initFrameName
             p.initControlUI(p.main)
-            p.initListUI(p.main)
-            p.uiRefreshEnabled = true; % Re-enable UI refresh
+            p.tabgp = uitabgroup(p.main);
+            plist = uitab(p.tabgp, 'Title', 'plot browser', 'Tag', '1');
+            pctrl2 = uitab(p.tabgp, 'Title', 'export setup', 'Tag', '2');
+            if selectedTab == 1
+                p.tabgp.SelectedTab = plist;
+                plist_uifc = p.uifc(plist, 'LR'); % Wrap uitab in uiflowcontainer
+                p.initListUI(plist_uifc) % Initialize UI elements
+            else
+                p.tabgp.SelectedTab = pctrl2;
+                pctrl2_uifc = p.uifc(pctrl2, 'TD');
+                p.initCtrl2UI(pctrl2_uifc)
+            end
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
@@ -180,7 +200,7 @@ classdef plotBrowser < handle
             % Export counter
             p.JLabel(cCounter, 'Number:');
             [p.counter, ~, ~, h] = p.JTextPane(cCounter, p.num);
-            h.KeyTypedCallback = @(src, evt) correctNumber(p, src, evt);
+            h.KeyTypedCallback = @(src, evt) setFileNum(p, src, evt);
             % File chooser for save location
             [~, ~, ~, h] = p.JButton(cPath, 'Browse...');
             h.ActionPerformedCallback = @p.browseCallback;
@@ -262,7 +282,7 @@ classdef plotBrowser < handle
                     hidden = false;
                     obj.UserData.hidden = hidden;
                 end
-                if isempty(strfind(p.getElementName(obj), 'Menu')) % Leave out menu items
+                if isempty(strfind(p.getElementName(obj), 'Menu')) %#ok<STREMP> % Leave out menu items
                     % Extend horizontally as needed for cleaner GUI look
                     % (Scrollbars cannot hold Matlab axes objects)
                     ct = ct + 1;
@@ -285,7 +305,7 @@ classdef plotBrowser < handle
                     h.ActionPerformedCallback = @(src, evt) p.hideObj(src, evt, obj);
                     if strcmp(p.getElementName(obj), 'Axes')
                         % Create blank axes for axes objects
-                        axes(cObj, 'Box', 'on', 'FontSize', 5);
+                        axes(cObj, 'Box', 'on', 'FontSize', 5, 'Color', [1 1 1]);
                     else
                         % Copy other objects for vizualization
                         ax = axes(cObj); %#ok<*LAXES>
@@ -293,6 +313,7 @@ classdef plotBrowser < handle
                         ax.XTick = [];
                         ax.YColor = 'none';
                         ax.XColor = 'none';
+                        ax.Color = [1 1 1];
                         try
                             cobj = copyobj(obj, ax);
                             p.setOrigColor(cobj);
@@ -311,6 +332,73 @@ classdef plotBrowser < handle
                     end
                 end
             end
+        end
+		function initCtrl2UI(p, component, varargin)
+            % MTODO: Write function for initializing additional tools
+            p.initExpandaxesUI(component, varargin)
+        end
+        function initExpandaxesUI(p, component, varargin)
+            % MTODO: Copy new expandaxes update to server
+            cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
+            [~, ~, ~, hCheckBox] = p.JCheckBox(cObj, 'expandaxes');
+            try
+                fhor = p.hndl.UserData.plotBrowserData.fhor; 
+            catch
+                fhor = 1;
+                p.hndl.UserData.plotBrowserData.fhor = fhor;
+            end
+            try 
+                fver = p.hndl.UserData.plotBrowserData.fver; 
+            catch
+                fver = 1;
+                p.hndl.UserData.plotBrowserData.fver = fver;
+            end
+            AX = findobj(p.hndl, 'type', 'axes');
+            if ~strcmp(AX(1).Tag, 'expandedaxes')
+                hCheckBox.setSelected(false)
+            end
+            hCheckBox.ActionPerformedCallback = @(src, evt) p.expandaxes(src);
+            fHor = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
+            fVer = p.uifc(cObj, 'TD', 'BackgroundColor', p.HTWGREY);
+            fhorL = p.JLabel(fHor, 'fHor:');
+            fverL = p.JLabel(fVer, 'fVer:');
+            % fhor and fver presets are stored in figure's UserData
+            [~, ~, nHor, nVer] = spidentify(p.hndl); % MTODO: Move spidentify to GitHub    
+            [fh, ~, ~, h] = p.JTextPane(fHor, num2str(fhor));
+            if nHor == 1 % Disable params if only 1 axes in horizontal direction
+                fhorL.setEnabled(false)
+                fh.setEnabled(false)
+            end
+            h.KeyTypedCallback = @(src, evt) setFHor(p, src, evt);
+            [fv, ~, ~, h] = p.JTextPane(fVer, num2str(fver));
+            if nVer == 1 % Disable params if only 1 axes in vertical direction
+                fverL.setEnabled(false)
+                fv.setEnabled(false)
+            end
+            h.KeyTypedCallback = @(src, evt) setFVer(p, src, evt);
+        end
+        function expandaxes(p, src)
+            % Wrapper for the expandaxes function
+            fhor = p.hndl.UserData.plotBrowserData.fhor;
+            fver = p.hndl.UserData.plotBrowserData.fver;
+            undo = ~src.isSelected;
+            figure(p.hndl) % Switch to referenced figure from plotBrowser GUI
+            expandaxes(p.hndl, fhor, fver, 'Undo', undo)
+            figure(p.frame) % Switch back to plotBrowser
+        end
+        function setFHor(p, src, evt)
+            % Stores fhor preset in figure's UserData
+            p.correctNumber(src, evt)
+            p.hndl.UserData.plotBrowserData.fhor = str2double(char(src.getText));
+        end
+        function setFVer(p, src, evt)
+            % Stores fver preset in figure's UserData
+            p.correctNumber(src, evt)
+            p.hndl.UserData.plotBrowserData.fver = str2double(char(src.getText));
+        end
+        function setFileNum(p, src, evt)
+            p.correctNumber(src, evt)
+            p.num = char(src.getText);
         end
         function setOrigColor(p, obj)
             try p.state.show(obj); catch; end
