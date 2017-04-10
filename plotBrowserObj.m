@@ -343,10 +343,70 @@ classdef plotBrowserObj < handle
 		function initCtrl2UI(p, component, varargin)
             % MTODO: Write function for initializing additional tools
             p.initExpandaxesUI(component, varargin)
-            p.initFontNameUI(component, varargin)
+            p.initFontNameUI(component)
+            p.initFontSizeUI(component)
+            p.initFontStyleUI(component)
+            p.initLanguageUI(component)
         end
-        function initFontNameUI(p, component, varargin)
-            import java.awt.* javax.swing.*
+        function initLanguageUI(p, component)
+            langs = {'English', 'German'};
+            tl = findall(p.hndl, '-property', 'TickLabels');
+            tlS = [];
+            for i = 1:numel(tl)
+                tlS = [tlS; tl.TickLabels]; %#ok<AGROW>
+            end
+            tl = findall(p.hndl, '-property', 'YTickLabel');
+            for i = 1:numel(tl)
+                tlS = [tlS; tl.YTickLabel]; %#ok<AGROW>
+            end
+            tl = findall(p.hndl, '-property', 'XTickLabel');
+            for i = 1:numel(tl)
+                tlS = [tlS; tl.XTickLabel]; %#ok<AGROW>
+            end
+            lidx = 0;
+            for i = 1:numel(tlS)
+                if ~isempty(regexp(tlS{i}, '\d,\d', 'ONCE'))
+                    lidx = 1;
+                end
+            end
+            [jc, ~, ~, h] = p.JComboBox(component, langs);
+            h.ActionPerformedCallback = @(src, evt) setLanguage(p, src);
+            jc.setSelectedIndex(lidx)
+            jc.setToolTipText('Sets Numbers in TickLabels, etc. according to language selected.')
+        end
+        function initFontStyleUI(p, component)
+            % Initializes UI components for setting figure's font style
+            % font weight
+            cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
+            obj = findall(p.hndl, '-property', 'FontWeight');
+            fw = obj(1).FontWeight;
+            [jc, ~, ~, h] = p.JCheckBox(cObj, 'bold');
+            if ~strcmp(fw, 'bold')
+                jc.setSelected(false)
+            end
+            h.ActionPerformedCallback = @(src, evt) setFontWeight(p, src);
+            % font angle
+            obj = findall(p.hndl, '-property', 'FontAngle');
+            angles = {'normal', 'italic', 'oblique'};
+            fa = obj(1).FontAngle;
+            [~, idx] = ismember(fa, angles);
+            [jc, ~, ~, h] = p.JComboBox(cObj, angles);
+            h.ActionPerformedCallback = @(src, evt) setFontAngle(p, src);
+            jc.setSelectedIndex(idx - 1)
+        end
+        function initFontSizeUI(p, component)
+            % Initializes UI components for setting figure's FontSize
+            cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
+            obj = findall(p.hndl, '-property', 'FontSize');
+            fs = num2str(obj(1).FontSize);
+            [editBox, ~, ~, h] = p.JTextPane(cObj, fs);
+            h.KeyTypedCallback = @(src, evt) correctNumber(p, src, evt);
+            % Apply button
+            [jb, ~, ~, h] = p.JButton(cObj, 'Apply FontSize');
+            h.ActionPerformedCallback = @(src, evt) setFontSize(p, editBox);
+            jb.setToolTipText('Applies the set FontSize to all text elements in the figure.')
+        end
+        function initFontNameUI(p, component)
             % Initializes the FontName UI components
             cObj = p.uifc(component, 'LR', 'BackgroundColor', p.HTWGREY);
             fonts = listfonts;
@@ -406,7 +466,66 @@ classdef plotBrowserObj < handle
             end
             h.KeyTypedCallback = @(src, evt) setFVer(p, src, evt);
         end
+        function setLanguage(p, src)
+            % Sets decimals according to language selected
+            idx = src.getSelectedIndex;
+            if idx == 0
+                repDec = ',';
+                newDec = '.';
+            else
+                repDec = '.';
+                newDec = ',';
+            end
+            tls = {'TickLabels', 'YTickLabel', 'XTickLabel'};
+            for i = 1:3
+                tl = findall(p.hndl, '-property', tls{i});
+                for j = 1:numel(tl)
+                    tl(j).(tls{i}) = strrep(tl(j).(tls{i}), repDec, newDec);
+                end
+            end
+            str = findall(p.hndl, '-property', 'String');
+            for i = 1:numel(str)
+                str(i).String = strrep(str(i).String, repDec, newDec);
+            end
+        end
+        function setFontAngle(p, src)
+            % sets text elements' font angle
+            idx = src.getSelectedIndex;
+            switch idx
+                case 0
+                    fa = 'normal';
+                case 1
+                    fa = 'italic';
+                case 2
+                    fa = 'oblique';
+            end
+            try
+                set(findall(p.hndl, '-property', 'FontAngle'), 'FontAngle', fa)
+            catch
+                warning('Setting FontAngle failed.')
+            end
+        end
+        function setFontWeight(p, src)
+            % sets text elements' font weight
+            obj = findall(p.hndl, '-property', 'FontWeight');
+            if src.isSelected
+                set(obj, 'FontWeight', 'bold')
+            else
+                set(obj, 'FontWeight', 'normal')
+            end
+        end
+        function setFontSize(p, editBox)
+            % Sets text elements' font size
+            obj = findall(p.hndl, '-property', 'FontSize');
+            try
+                fs = str2double(char(editBox.getText));
+                set(obj, 'FontSize', fs)
+            catch
+                editBox.setText(num2str(obj(1).FontSize))
+            end
+        end
         function setFontName(p, src)
+            % Sets text elements' font name
             fonts = listfonts;
             fontname = fonts{src.getSelectedIndex + 1};
             set(findall(p.hndl, '-property', 'FontName'), 'FontName', fontname)
