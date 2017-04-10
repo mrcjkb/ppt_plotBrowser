@@ -379,12 +379,14 @@ classdef plotBrowser < handle
         end
         function expandaxes(p, src)
             % Wrapper for the expandaxes function
+            p.uiRefreshEnabled = false; % Temporarily disable UI refresh
             fhor = p.hndl.UserData.plotBrowserData.fhor;
             fver = p.hndl.UserData.plotBrowserData.fver;
             undo = ~src.isSelected;
             figure(p.hndl) % Switch to referenced figure from plotBrowser GUI
             expandaxes(p.hndl, fhor, fver, 'Undo', undo)
             figure(p.frame) % Switch back to plotBrowser
+            p.uiRefreshEnabled = true; % Re-enable UI refresh
         end
         function setFHor(p, src, evt)
             % Stores fhor preset in figure's UserData
