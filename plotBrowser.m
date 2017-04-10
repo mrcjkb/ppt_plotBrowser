@@ -377,9 +377,9 @@ classdef plotBrowser < handle
             fhor = p.hndl.UserData.plotBrowserData.fhor;
             fver = p.hndl.UserData.plotBrowserData.fver;
             undo = ~src.isSelected;
-            f = p.hndl;
-            expandaxes(f, fhor, fver, 'Undo', undo)
-            % MTODO: Fix bug causing colorbar to disappear when called from this method (Canot be reproduced by using original expandaxes function)
+            figure(p.hndl) % Switch to referenced figure from plotBrowser GUI
+            expandaxes(p.hndl, fhor, fver, 'Undo', undo)
+            figure(p.frame) % Switch back to plotBrowser
         end
         function setFHor(p, src, evt)
             % Stores fhor preset in figure's UserData
