@@ -4,8 +4,8 @@ function p = plotBrowser(varargin)
     %
     %Syntax:
     %
-    %   plotBrowser; % opens a plotBrowser for the current figure
-    %   plotBrowser(h); % opens a plotBrowser for figure h
+    %   plotBrowser % opens a plotBrowser for the current figure
+    %   plotBrowser(h) % opens a plotBrowser for figure h
     %   p = plotBrowser(_); % returns a plotBrowser object p that contains
     %                       % a cell array of the graphics handles that can
     %                       % be hidden/shown
