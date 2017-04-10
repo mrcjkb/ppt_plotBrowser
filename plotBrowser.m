@@ -50,6 +50,8 @@ classdef plotBrowser < handle
         stateIDX = 0;
 		tabgp; % uitabgroup
         uiRefreshEnabled = true; % flag to enable/disable UI auto refresh
+        plist_uifc; % uiflowcontainer for list uitab
+        pctrl2_uifc; % uiflowcontainer for export setup uitab
     end
     properties (Hidden)
         hiddenColor = 'none'; % background color
@@ -165,10 +167,10 @@ classdef plotBrowser < handle
             else
                 p.tabgp.SelectedTab = pctrl2;
             end
-            plist_uifc = p.uifc(plist, 'LR'); % Wrap uitabs in uiflowcontainers
-            pctrl2_uifc = p.uifc(pctrl2, 'TD');
-            p.initListUI(plist_uifc) % Initialize UI elements
-            p.initCtrl2UI(pctrl2_uifc)
+            p.plist_uifc = p.uifc(plist, 'LR'); % Wrap uitabs in uiflowcontainers
+            p.pctrl2_uifc = p.uifc(pctrl2, 'TD');
+            p.initListUI(p.plist_uifc) % Initialize UI elements
+            p.initCtrl2UI(p.pctrl2_uifc)
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
@@ -386,6 +388,10 @@ classdef plotBrowser < handle
             figure(p.hndl) % Switch to referenced figure from plotBrowser GUI
             expandaxes(p.hndl, fhor, fver, 'Undo', undo)
             figure(p.frame) % Switch back to plotBrowser
+            % Re-initialize list UI in case a colorbar handle was deleted by expandaxes
+            container = p.plist_uifc.Children.Children;
+            delete(container.Children)
+            p.initListUI(container)
             p.uiRefreshEnabled = true; % Re-enable UI refresh
         end
         function setFHor(p, src, evt)
