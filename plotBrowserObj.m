@@ -1,12 +1,12 @@
-classdef plotBrowser < handle
-    %PLOTBROWSER: GUI tool (similar to Matlab's plotbrowser)
+classdef plotBrowserObj < handle
+    %PLOTBROWSEROBJ: GUI tool (similar to Matlab's plotbrowser)
     %intended for quick creation of images for PowerPoint animations.
     %
     %Syntax:
     %
-    %   plotBrowser; % opens a plotBrowser for the current figure
-    %   plotBrowser(h); % opens a plotBrowser for figure h
-    %   p = plotBrowser(_); % returns a plotBrowser object p that contains
+    %   plotBrowserObj; % opens a plotBrowser for the current figure
+    %   plotBrowserObj(h); % opens a plotBrowser for figure h
+    %   p = plotBrowserObj(_); % returns a plotBrowser object p that contains
     %                       % a cell array of the graphics handles that can
     %                       % be hidden/shown
     %
@@ -15,9 +15,11 @@ classdef plotBrowser < handle
     %
     %Required functions:
     %
-    %   - printfig: For Export feature. Available at: https://github.com/MrcJkb/printfig.git
+    %   - printfig: For Export feature.
     %   - expandaxes: For Export setup feature.
     %   - spidentify: For Export setup feature.
+    %
+    %The functions can be downloaded at: https://github.com/MrcJkb/
     %
     %SEE ALSO: plotbrowser
     
@@ -63,7 +65,7 @@ classdef plotBrowser < handle
     end
     
     methods
-        function p = plotBrowser(h)
+        function p = plotBrowserObj(h)
             if verLessThan('matlab', '9.0') % Verify Matlab version (R2016a and above)
                 error('Matlab R2016a or above required to run this tool.')
             end
