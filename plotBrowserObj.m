@@ -540,7 +540,8 @@ classdef plotBrowserObj < handle
             expandaxes(p.hndl, fhor, fver, 'Undo', undo)
             figure(p.frame) % Switch back to plotBrowser
             % Re-initialize list UI in case a colorbar handle was deleted by expandaxes
-            container = p.plist_uifc.Children.Children;
+            container = p.plist_uifc;
+            delete(container.Children)
             p.initListUI(container)
             p.uiRefreshEnabled = true; % Re-enable UI refresh
         end
