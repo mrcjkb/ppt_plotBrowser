@@ -54,6 +54,7 @@ classdef plotBrowserObj < handle
         uiRefreshEnabled = true; % flag to enable/disable UI auto refresh
         plist_uifc; % uiflowcontainer for list uitab
         pctrl2_uifc; % uiflowcontainer for export setup uitab
+        paxpos_uifc; % uiflowcontainer for positioning uitab
         desktopFontSelected = true; % for DesktopFontPicker
         figureFontName = java.awt.Font.PLAIN;
         figureFontSize = 11;
@@ -167,15 +168,20 @@ classdef plotBrowserObj < handle
             p.tabgp = uitabgroup(p.main);
             plist = uitab(p.tabgp, 'Title', 'plot browser', 'Tag', '1');
             pctrl2 = uitab(p.tabgp, 'Title', 'export setup', 'Tag', '2');
+            paxpos = uitab(p.tabgp, 'Title', 'positioning', 'Tag', '3');
             if selectedTab == 1
                 p.tabgp.SelectedTab = plist;
-            else
+            elseif selectedTab == 2
                 p.tabgp.SelectedTab = pctrl2;
+            else
+                p.tabgp.SelectedTab = paxpos;
             end
             p.plist_uifc = p.uifc(plist, 'LR'); % Wrap uitabs in uiflowcontainers
             p.pctrl2_uifc = p.uifc(pctrl2, 'TD');
+            p.paxpos_uifc = p.uifc(paxpos, 'TD');
             p.initListUI(p.plist_uifc) % Initialize UI elements
             p.initCtrl2UI(p.pctrl2_uifc)
+            p.initAxposUI(p.paxpos_uifc)
         end
         function initFrameName(p)
             % Initializes the GUI frame's title bar.
@@ -186,6 +192,7 @@ classdef plotBrowserObj < handle
                 p.frame.Name = ['plotBrowser: ', h.Name];
             end
         end
+        %% CTRL1 UI
         function initControlUI(p, component)
             % Initializes the GUI for exporting the images and setting the
             % state
@@ -230,6 +237,7 @@ classdef plotBrowserObj < handle
             j.setSelectedIndex(p.stateIDX)
             h.ValueChangedCallback = @p.switchState;
         end
+        %% List UI
         function initListUI(p, component, varargin)
             % Intitializes the list of graphics objects to be shown/hidden
             import javax.swing.* java.awt.*
@@ -340,6 +348,7 @@ classdef plotBrowserObj < handle
                 end
             end
         end
+        % CTRL2 UI
 		function initCtrl2UI(p, component, varargin)
             % MTODO: Write function for initializing additional tools
             p.initExpandaxesUI(component, varargin)
@@ -466,6 +475,10 @@ classdef plotBrowserObj < handle
             end
             h.KeyTypedCallback = @(src, evt) setFVer(p, src, evt);
         end
+        %% Positioning UI
+        function initAxposUI(p, src)
+        end
+        %% CTRL2 Callbacks
         function setLanguage(p, src)
             % Sets decimals according to language selected
             idx = src.getSelectedIndex;
@@ -530,6 +543,7 @@ classdef plotBrowserObj < handle
             fontname = fonts{src.getSelectedIndex + 1};
             set(findall(p.hndl, '-property', 'FontName'), 'FontName', fontname)
         end
+        %% Expandaxes
         function expandaxes(p, src)
             % Wrapper for the expandaxes function
             p.uiRefreshEnabled = false; % Temporarily disable UI refresh
@@ -555,6 +569,7 @@ classdef plotBrowserObj < handle
             p.correctNumber(src, evt)
             p.hndl.UserData.plotBrowserData.fver = str2double(char(src.getText));
         end
+        %% CTRL1 & List Callbacks
         function setFileNum(p, src, evt)
             p.correctNumber(src, evt)
             p.num = char(src.getText);
@@ -648,6 +663,7 @@ classdef plotBrowserObj < handle
                 p.hiddenColor = 'none';
             end
         end
+        %% Sub-functions
         function nEl = addCustomEntries(p, type, typeHandle, n0)
             % Function for adding object adapters
             t = findobj(p.hndl, '-property', type);
@@ -683,6 +699,7 @@ classdef plotBrowserObj < handle
     end
     
     methods (Hidden, Static)
+        %% Wrappers for Java swing classes, etc. adapted to Matlab
         function u = uifc(parent, flowdirection, varargin)
             % Wrapper for simplifying the uiflowcontainer syntax
             if strcmp(flowdirection, 'LR')
@@ -698,7 +715,6 @@ classdef plotBrowserObj < handle
                 'FlowDirection', flowdirection, 'BackgroundColor', [1 1 1], ...
                 varargin{:});
         end
-        % Wrappers for Java swing classes adapted to Matlab
         function [j, hcomponent, hcontainer] = JLabel(container, str)
             import javax.swing.* java.awt.*
             j = JLabel;
@@ -758,7 +774,6 @@ classdef plotBrowserObj < handle
             end
         end
     end
-    
     
     methods (Static)
         function s = getElementName(obj)
