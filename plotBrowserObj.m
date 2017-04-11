@@ -58,6 +58,8 @@ classdef plotBrowserObj < handle
         desktopFontSelected = true; % for DesktopFontPicker
         figureFontName = java.awt.Font.PLAIN;
         figureFontSize = 11;
+        movableObj; % Array of movable objects (for positioning)
+        selectedMovableObj; % Currently selected movable object (for positioning)
     end
     properties (Hidden)
         hiddenColor = 'none'; % background color
@@ -475,8 +477,43 @@ classdef plotBrowserObj < handle
             end
             h.KeyTypedCallback = @(src, evt) setFVer(p, src, evt);
         end
-        %% Positioning UI
-        function initAxposUI(p, src)
+        %% POSITIONING UI
+        function initAxposUI(p, component, varargin)
+            % Initializes the axes positions
+            types = {'axes', 'colorbar', 'legend', 'text'};
+            obj = cellfun(@(x) findobj(p.hndl, 'type', x), types, 'un', false); % find objects
+            nEl = sum(cellfun(@numel, obj)) + 1; % total number of elements
+            p.movableObj = cell(nEl, 1); % initialize cell array of movable objects
+            ct = 2;
+            for i = 1:numel(obj)
+                p.movableObj(ct:ct+numel(obj{i})-1) = num2cell(obj{i});
+                ct = ct + 1;
+            end
+            % Create cell array of object class names
+            objNames = cellfun(@class, p.movableObj, 'un', false);
+            dotIdx = cellfun(@(x) strfind(x, '.'), objNames, 'un', false);
+            objNames = [{'nothing selected'}; cellfun(@(x, y) x(y(end)+1:end), objNames(2:end), dotIdx(2:end), 'un', false)];
+            [jc, ~, ~, h] = p.JComboBox(component, objNames);
+            jc.setToolTipText('Select an object to be moved.')
+            h.ActionPerformedCallback = @(src, evt) setSelectedMovableObj(p, src);
+        end
+        %% POSITIONING Callbacks
+        function setSelectedMovableObj(p, src)
+            % sets the selected object up for repositioning
+            try
+                p.selectedMovableObj.Color = p.selectedMovableObj.UserData.plotBrowserData.nonMovableColor;
+                p.selectedMovableObj.LineWidth = p.selectedMovableObj.UserData.plotBrowserData.nonMovableLineWidth;
+            catch
+                % do nothing
+            end
+            p.selectedMovableObj = p.movableObj{src.getSelectedIndex + 1};
+            if isempty(p.selectedMovableObj)
+                return;
+            end
+            p.selectedMovableObj.UserData.plotBrowserData.nonMovableColor = p.selectedMovableObj.Color;
+            p.selectedMovableObj.UserData.plotBrowserData.nonMovableLineWidth = p.selectedMovableObj.LineWidth;
+            p.selectedMovableObj.Color = [118 185 0]/255;
+            p.selectedMovableObj.LineWidth = 5;    
         end
         %% CTRL2 Callbacks
         function setLanguage(p, src)
