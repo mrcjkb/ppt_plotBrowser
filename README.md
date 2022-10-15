@@ -4,7 +4,7 @@
 >
 > __NOTE:__
 >
-> Since I no longer use Matlab, I cannot actively maintain this model.
+> Since I no longer use Matlab, I cannot actively maintain this repo.
 > I will gladly accept PRs, as long as I can review them without Matlab.
 
 A similar tool to the Matlab plotbrowser inteded for the quick creation of images for PowerPoint animations.
